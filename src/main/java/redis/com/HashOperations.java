@@ -13,12 +13,24 @@ public class HashOperations {
     private final static Logger logger = LoggerFactory.getLogger(HashOperations.class);
 
     private Jedis jedis;
-    private ObjectMapper objectMapper;
+    //private ObjectMapper objectMapper;
+    private RedisSerializer hashKeySerializer;
+    private RedisSerializer hashValueSerializer;
 
-    HashOperations(Jedis jedis) {
+//    HashOperations(Jedis jedis) {
+//        this.jedis = jedis;
+//        //objectMapper = new ObjectMapper();
+//    }
+
+    public HashOperations(Jedis jedis, RedisSerializer hashKeySerializer, RedisSerializer hashValueSerializer) {
         this.jedis = jedis;
-        objectMapper = new ObjectMapper();
+        this.hashKeySerializer = hashKeySerializer;
+        this.hashValueSerializer = hashValueSerializer;
     }
+
+//    private String deserializeHashKey(byte[] bytes) {
+////
+////    }
 
     public void putAll(String key, Map<String, Object> m) throws SerializationException {
 
@@ -37,16 +49,37 @@ public class HashOperations {
             logger.error(ex.getMessage());
             throw new SerializationException(ex.getMessage());
         }
-
-
     }
 
     private  byte[] rawHashKey(String k) throws Exception {
-        return objectMapper.writeValueAsBytes(k);
+        //return objectMapper.writeValueAsBytes(k);
+        return hashKeySerializer.serialize(k);
     }
 
     private  byte[] rawHashValue(Object v) throws Exception {
-        return objectMapper.writeValueAsBytes(v);
+        //return objectMapper.writeValueAsBytes(v);
+        return hashValueSerializer.serialize(v);
+    }
+
+
+    private String deserializeHashKeys(byte[] bytes) {
+        try {
+            //return (String) objectMapper.readValue(bytes, 0, bytes.length, String.class);
+            return (String) hashKeySerializer.deserialize(bytes);
+        } catch (Exception ex) {
+            logger.error(ex.getMessage());
+            throw new SerializationException(ex.getMessage());
+        }
+    }
+
+    private Object deserializeHashValues(byte[] bytes) {
+        try {
+            //return (String) objectMapper.readValue(bytes, 0, bytes.length, String.class);
+            return (Object) hashValueSerializer.deserialize(bytes);
+        } catch (Exception ex) {
+            logger.error(ex.getMessage());
+            throw new SerializationException(ex.getMessage());
+        }
     }
 
     public Map<String, Object> entries(String key) {
@@ -59,17 +92,15 @@ public class HashOperations {
             Map<String, Object> m = new LinkedHashMap<>(map.size());
 
             for (Map.Entry<byte[], byte[]> entry : map.entrySet()) {
-
+                //objectMapper.readValue(entry.getKey())
+                m.put( deserializeHashKeys(entry.getKey()),deserializeHashValues(entry.getValue()));
             }
             //objectMapper.w
-
             return m;
 
         } catch ( Exception ex) {
             logger.error(ex.getMessage());
             throw new SerializationException(ex.getMessage());
         }
-
-
     }
 }

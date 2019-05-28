@@ -37,4 +37,9 @@ public class Person {
     public void setGender(String gender) {
         this.gender = gender;
     }
+
+    @Override
+    public String toString() {
+        return "Quote [id = " + id +  ", firstName=" + firstName + ", lastName=" + lastName + ", gender=" + gender + "]";
+    }
 }
